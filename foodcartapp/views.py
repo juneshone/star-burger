@@ -3,8 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-
-import json
+from rest_framework import status
 
 from .models import Product, OrderItem, OrderDetail
 
@@ -72,14 +71,19 @@ def register_order(request):
             phonenumber=raw_order['phonenumber'],
             address=raw_order['address'],
         )
-        for product in raw_order['products']:
-            OrderItem.objects.create(
-                products=get_object_or_404(Product, id=product['product']),
-                order=get_object_or_404(OrderDetail, id=order_details.id),
-                quantity=product['quantity']
-            )
-        return Response(raw_order)
-    except ValueError as e:
+        if raw_order['products']:
+            for product in raw_order['products']:
+                OrderItem.objects.create(
+                    products=get_object_or_404(Product, id=product['product']),
+                    order=get_object_or_404(OrderDetail, id=order_details.id),
+                    quantity=product['quantity']
+                )
+            return Response(raw_order)
+        else:
+            return Response({
+                'error': 'products list cannot be empty',
+            })
+    except (TypeError, KeyError):
         return Response({
-            'error': e,
+            'error': 'products key not presented or not list',
         })
