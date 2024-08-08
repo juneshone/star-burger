@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.serializers import ModelSerializer
 
 from .models import Product, OrderItem, OrderDetail
 
@@ -60,30 +60,38 @@ def product_list_api(request):
     })
 
 
+class OrderItemSerializer(ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['products', 'quantity']
+
+
+class OrderSerializer(ModelSerializer):
+    products = OrderItemSerializer(many=True, allow_empty=False)
+
+    class Meta:
+        model = OrderDetail
+        fields = '__all__'
+
+
 @api_view(['POST'])
 def register_order(request):
-    try:
-        raw_order = request.data
-        print(raw_order)
-        order_details = OrderDetail.objects.create(
-            firstname=raw_order['firstname'],
-            lastname=raw_order['lastname'],
-            phonenumber=raw_order['phonenumber'],
-            address=raw_order['address'],
+    raw_order = request.data
+    serializer = OrderSerializer(data=raw_order)
+    serializer.is_valid(raise_exception=True)
+    print(raw_order)
+    order_details = OrderDetail.objects.create(
+        firstname=serializer.validated_data['firstname'],
+        lastname=serializer.validated_data['lastname'],
+        phonenumber=serializer.validated_data['phonenumber'],
+        address=serializer.validated_data['address'],
+    )
+    products = serializer.validated_data.get('products', [])
+    print(products)
+    for product in products:
+        OrderItem.objects.create(
+            products=get_object_or_404(Product, name=product['products']),
+            order=get_object_or_404(OrderDetail, id=order_details.id),
+            quantity=product['quantity']
         )
-        if raw_order['products']:
-            for product in raw_order['products']:
-                OrderItem.objects.create(
-                    products=get_object_or_404(Product, id=product['product']),
-                    order=get_object_or_404(OrderDetail, id=order_details.id),
-                    quantity=product['quantity']
-                )
-            return Response(raw_order)
-        else:
-            return Response({
-                'error': 'products list cannot be empty',
-            })
-    except (TypeError, KeyError):
-        return Response({
-            'error': 'products key not presented or not list',
-        })
+    return Response(serializer.data)
