@@ -1,11 +1,10 @@
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
 
-from .models import Product, OrderItem, OrderDetail
+from .models import Product
+from foodcartapp.serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -60,36 +59,9 @@ def product_list_api(request):
     })
 
 
-class OrderItemSerializer(ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity']
-
-
-class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(many=True, allow_empty=False)
-
-    class Meta:
-        model = OrderDetail
-        fields = '__all__'
-
-
 @api_view(['POST'])
 def register_order(request):
-    raw_order = request.data
-    serializer = OrderSerializer(data=raw_order)
+    serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    order_details = OrderDetail.objects.create(
-        firstname=serializer.validated_data['firstname'],
-        lastname=serializer.validated_data['lastname'],
-        phonenumber=serializer.validated_data['phonenumber'],
-        address=serializer.validated_data['address'],
-    )
-    products = serializer.validated_data.get('products', [])
-    for product in products:
-        OrderItem.objects.create(
-            product=get_object_or_404(Product, name=product['product']),
-            order=get_object_or_404(OrderDetail, id=order_details.id),
-            quantity=product['quantity']
-        )
+    serializer.create(serializer.validated_data)
     return Response(serializer.data)
