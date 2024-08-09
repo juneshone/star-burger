@@ -63,7 +63,7 @@ def product_list_api(request):
 class OrderItemSerializer(ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['products', 'quantity']
+        fields = ['product', 'quantity']
 
 
 class OrderSerializer(ModelSerializer):
@@ -79,7 +79,6 @@ def register_order(request):
     raw_order = request.data
     serializer = OrderSerializer(data=raw_order)
     serializer.is_valid(raise_exception=True)
-    print(raw_order)
     order_details = OrderDetail.objects.create(
         firstname=serializer.validated_data['firstname'],
         lastname=serializer.validated_data['lastname'],
@@ -87,10 +86,9 @@ def register_order(request):
         address=serializer.validated_data['address'],
     )
     products = serializer.validated_data.get('products', [])
-    print(products)
     for product in products:
         OrderItem.objects.create(
-            products=get_object_or_404(Product, name=product['products']),
+            product=get_object_or_404(Product, name=product['product']),
             order=get_object_or_404(OrderDetail, id=order_details.id),
             quantity=product['quantity']
         )

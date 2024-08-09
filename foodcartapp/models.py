@@ -143,7 +143,7 @@ class OrderDetail(models.Model):
 
 
 class OrderItem(models.Model):
-    products = models.ForeignKey(
+    product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
         related_name='order_items',

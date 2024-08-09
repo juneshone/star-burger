@@ -75,6 +75,34 @@ TEMPLATES = [
     },
 ]
 
+LOGGING = {
+    "version": 1,
+    "formatters": {
+        "default": {
+            "format": "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s",
+        },
+    },
+    "handlers": {
+        "error_console": {
+            "level": "WARNING",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "formatter": "default",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["error_console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'foodcartapp.exceptions.custom_exception_handler'
+}
+
 WSGI_APPLICATION = 'star_burger.wsgi.application'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
