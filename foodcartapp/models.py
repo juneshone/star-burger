@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -142,6 +143,12 @@ class OrderDetail(models.Model):
         return f'{self.firstname} {self.lastname}, {self.address}'
 
 
+class OrderCostQuerySet(models.QuerySet):
+    def calculate_order_cost(self):
+        order_cost = Sum(F('product__price') * F('quantity'))
+        return order_cost
+
+
 class OrderItem(models.Model):
     product = models.ForeignKey(
         Product,
@@ -161,6 +168,8 @@ class OrderItem(models.Model):
         'Количество',
         default=1
     )
+
+    objects = OrderCostQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'Элемент заказа'
