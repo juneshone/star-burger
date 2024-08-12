@@ -145,7 +145,7 @@ class OrderDetail(models.Model):
 
 class OrderCostQuerySet(models.QuerySet):
     def calculate_order_cost(self):
-        order_cost = Sum(F('product__price') * F('quantity'))
+        order_cost = Sum(F('order_items__product__price') * F('order_items__quantity'))
         return order_cost
 
 
