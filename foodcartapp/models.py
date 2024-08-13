@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -145,7 +147,7 @@ class OrderDetail(models.Model):
 
 class OrderCostQuerySet(models.QuerySet):
     def calculate_order_cost(self):
-        order_cost = Sum(F('order_items__product__price') * F('order_items__quantity'))
+        order_cost = Sum(F('order_items__price') * F('order_items__quantity'))
         return order_cost
 
 
@@ -168,7 +170,13 @@ class OrderItem(models.Model):
         'Количество',
         default=1
     )
-
+    price = models.DecimalField(
+        'Цена',
+        validators=[MinValueValidator(0)],
+        max_digits=6,
+        decimal_places=2,
+        default=0
+    )
     objects = OrderCostQuerySet.as_manager()
 
     class Meta:

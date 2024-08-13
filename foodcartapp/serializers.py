@@ -27,6 +27,9 @@ class OrderSerializer(ModelSerializer):
             phonenumber=validated_data['phonenumber'],
             address=validated_data['address'],
         )
+        for product in validated_data['products']:
+            product['price'] = product['product'].price
+
         products = [
             OrderItem(order=order_details, **fields) for fields in validated_data['products']
         ]
