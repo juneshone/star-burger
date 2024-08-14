@@ -136,13 +136,28 @@ class OrderDetail(models.Model):
         db_index=True,
     )
     address = models.TextField('Адрес доставки', max_length=200)
+    STATUS_CHOICES = [
+        ('UNPROCESSED', 'Необработанный'),
+        ('CONFIRMATION', 'На подтверждении'),
+        ('ASSEMBLED', 'Собран'),
+        ('ON_WAY', 'В пути'),
+        ('DELIVERED', 'Доставлен'),
+        ('CANCELLED', 'Отменен'),
+    ]
+    status = models.CharField(
+        'Статус заказа',
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='UNPROCESSED',
+        db_index=True,
+    )
 
     class Meta:
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
 
     def __str__(self):
-        return f'{self.firstname} {self.lastname}, {self.address}'
+        return f'{self.firstname} {self.lastname}, {self.address}, {self.status}'
 
 
 class OrderCostQuerySet(models.QuerySet):

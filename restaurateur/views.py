@@ -92,6 +92,7 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     return render(request, template_name='order_items.html', context={
-        'order_items': OrderDetail.objects.prefetch_related('order_items').annotate(
+        'order_items': OrderDetail.objects.exclude(status='CANCELLED').prefetch_related(
+            'order_items').annotate(
             order_cost=OrderItem.objects.calculate_order_cost()),
     })
