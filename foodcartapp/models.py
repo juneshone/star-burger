@@ -172,6 +172,17 @@ class OrderDetail(models.Model):
         blank=True,
         db_index=True,
     )
+    PAYMENT_CHOICES = [
+        ('CASH', 'Наличные'),
+        ('ELECTRONIC', 'Электронно'),
+    ]
+    payment = models.CharField(
+        'Способ оплаты',
+        max_length=50,
+        choices=PAYMENT_CHOICES,
+        default='CASH',
+        db_index=True,
+    )
 
     class Meta:
         verbose_name = 'Заказ'
