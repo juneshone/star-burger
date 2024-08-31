@@ -1,13 +1,16 @@
+import requests
 from django import forms
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
+from geopy import distance
 
 from foodcartapp.models import Product, Restaurant, OrderItem, OrderDetail, RestaurantMenuItem
+from star_burger.settings import YANDEX_MAP_API
 
 
 class Login(forms.Form):
@@ -89,6 +92,24 @@ def view_restaurants(request):
     })
 
 
+def fetch_coordinates(apikey, address):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lon, lat
+
+
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     menu = RestaurantMenuItem.objects.filter(availability=True) \
@@ -101,12 +122,24 @@ def view_orders(request):
         products_in_order = [order_item.product.id for order_item in order.order_items.all()]
         for product_in_order in products_in_order:
             product_in_restaurant = menu.filter(product=product_in_order)
-            availability_restaurants = set(product_in_restaurant.values_list('restaurant__name', flat=True))
+            availability_restaurants = set(product_in_restaurant.values_list('restaurant', flat=True))
             if not restaurants:
                 restaurants = availability_restaurants
             else:
                 restaurants.intersection_update(availability_restaurants)
-        order.restaurants = restaurants
+
+        distance_to_restaurants = []
+        for restaurant in restaurants:
+            restaurant_details = get_object_or_404(Restaurant, id=restaurant)
+            restaurant_coords = fetch_coordinates(YANDEX_MAP_API, restaurant_details.address)
+            customer_coords = fetch_coordinates(YANDEX_MAP_API, order.address)
+            distance_to_restaurant = round(distance.distance(restaurant_coords, customer_coords).km, 3)
+
+            distance_to_restaurants.append(
+                {'name': restaurant_details.name, 'distance_to_restaurant': distance_to_restaurant}
+            )
+        order.restaurants = sorted(distance_to_restaurants, key=lambda restaurant: restaurant['distance_to_restaurant'])
+
     return render(request, template_name='order_items.html', context={
         'order_items': orders
     })
