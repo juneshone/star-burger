@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
-from foodcartapp.models import Product, Restaurant, OrderItem, OrderDetail
+from foodcartapp.models import Product, Restaurant, OrderItem, OrderDetail, RestaurantMenuItem
 
 
 class Login(forms.Form):
@@ -91,8 +91,22 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
+    menu = RestaurantMenuItem.objects.filter(availability=True) \
+        .prefetch_related('restaurant', 'product')
+    orders = OrderDetail.objects.exclude(status='DELIVERED').prefetch_related(
+        'order_items').annotate(
+        order_cost=OrderItem.objects.calculate_order_cost())
+    for order in orders:
+        restaurants = []
+        products_in_order = [order_item.product.id for order_item in order.order_items.all()]
+        for product_in_order in products_in_order:
+            product_in_restaurant = menu.filter(product=product_in_order)
+            availability_restaurants = set(product_in_restaurant.values_list('restaurant__name', flat=True))
+            if not restaurants:
+                restaurants = availability_restaurants
+            else:
+                restaurants.intersection_update(availability_restaurants)
+        order.restaurants = restaurants
     return render(request, template_name='order_items.html', context={
-        'order_items': OrderDetail.objects.exclude(status='CANCELLED').prefetch_related(
-            'order_items').annotate(
-            order_cost=OrderItem.objects.calculate_order_cost()),
+        'order_items': orders
     })

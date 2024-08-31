@@ -137,7 +137,7 @@ class OrderDetail(models.Model):
     address = models.TextField('Адрес доставки', max_length=200)
     STATUS_CHOICES = [
         ('UNPROCESSED', 'Необработанный'),
-        ('CONFIRMATION', 'На подтверждении'),
+        ('CONFIRMATION', 'Готовится'),
         ('ASSEMBLED', 'Собран'),
         ('ON_WAY', 'В пути'),
         ('DELIVERED', 'Доставлен'),
@@ -182,6 +182,15 @@ class OrderDetail(models.Model):
         choices=PAYMENT_CHOICES,
         default='CASH',
         db_index=True,
+    )
+    restaurant = models.ForeignKey(
+        Restaurant,
+        on_delete=models.CASCADE,
+        related_name='order_details',
+        verbose_name='Ресторан',
+        db_index=True,
+        blank=True,
+        null=True
     )
 
     class Meta:
