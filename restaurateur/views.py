@@ -10,6 +10,7 @@ from django.contrib.auth import views as auth_views
 from geopy import distance
 
 from foodcartapp.models import Product, Restaurant, OrderItem, OrderDetail, RestaurantMenuItem
+from places.models import Place
 from star_burger.settings import YANDEX_MAP_API
 
 
@@ -119,7 +120,7 @@ def view_orders(request):
         order_cost=OrderItem.objects.calculate_order_cost())
     for order in orders:
         restaurants = []
-        products_in_order = [order_item.product.id for order_item in order.order_items.all()]
+        products_in_order = [order_item.product.id for order_item in order.order_items.select_related('product')]
         for product_in_order in products_in_order:
             product_in_restaurant = menu.filter(product=product_in_order)
             availability_restaurants = set(product_in_restaurant.values_list('restaurant', flat=True))
@@ -132,8 +133,18 @@ def view_orders(request):
         for restaurant in restaurants:
             restaurant_details = get_object_or_404(Restaurant, id=restaurant)
             restaurant_coords = fetch_coordinates(YANDEX_MAP_API, restaurant_details.address)
-            customer_coords = fetch_coordinates(YANDEX_MAP_API, order.address)
-            distance_to_restaurant = round(distance.distance(restaurant_coords, customer_coords).km, 3)
+            places = set(Place.objects.values_list('address', flat=True))
+            if order.address in places:
+                place = get_object_or_404(Place, address=order.address)
+                distance_to_restaurant = round(distance.distance(restaurant_coords, (place.lon, place.lat)).km, 3)
+            else:
+                lon, lat = fetch_coordinates(YANDEX_MAP_API, order.address)
+                Place.objects.create(
+                    address=order.address,
+                    lat=lat,
+                    lon=lon
+                )
+                distance_to_restaurant = round(distance.distance(restaurant_coords, (lon, lat)).km, 3)
 
             distance_to_restaurants.append(
                 {'name': restaurant_details.name, 'distance_to_restaurant': distance_to_restaurant}
