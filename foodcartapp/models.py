@@ -155,8 +155,8 @@ class OrderDetail(models.Model):
         max_length=300,
         blank=True,
     )
-    registrated_at = models.DateTimeField(
-        'Время создания',
+    registered_at = models.DateTimeField(
+        'Зарегистрирован в',
         default=timezone.now,
         db_index=True,
     )
