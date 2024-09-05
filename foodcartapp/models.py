@@ -231,7 +231,6 @@ class OrderItem(models.Model):
         validators=[MinValueValidator(0)],
         max_digits=6,
         decimal_places=2,
-        default=0
     )
     objects = OrderCostQuerySet.as_manager()
 
