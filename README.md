@@ -179,6 +179,10 @@ Parcel будет следить за файлами в каталоге `bundle
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
 - `YANDEX_MAP_API` — API Яндекс-геокодера. Как получить токен
   смотреть [здесь](https://dvmn.org/encyclopedia/api-docs/yandex-geocoder-api/).
+- `ROLLBAR_ACCESS_TOKEN` — токен доступа к проекту для мониторинга исключений в Rollbar. Создайте проект
+  по [ссылке](https://rollbar.com/). Выберите свой фреймворк, чтобы начать работу с
+  Rollbar SDK, и интегрируйте SDK в ваш проект по инструкции.
+- `ENVIRONMENT` — название окружения или инсталляции сайта в Rollbar.
 
 ## Цели проекта
 
