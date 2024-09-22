@@ -183,6 +183,8 @@ Parcel будет следить за файлами в каталоге `bundle
   по [ссылке](https://rollbar.com/). Выберите свой фреймворк, чтобы начать работу с
   Rollbar SDK, и интегрируйте SDK в ваш проект по инструкции.
 - `ENVIRONMENT` — название окружения или инсталляции сайта в Rollbar.
+- `DB_URL` — однострочный адрес к базе данных Postgres в формате `postgres://USER:PASSWORD@HOST:PORT/NAME`. Больше
+  информации в [документации](https://github.com/jacobian/dj-database-url).
 
 ## Цели проекта
 
