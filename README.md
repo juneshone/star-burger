@@ -20,6 +20,23 @@
 
 Ссылка на сайт: https://starburgerrr.ru/
 
+## Переменнные окружения
+
+Часть данных проекта берётся из переменных окружения. Чтобы их определить, создайте файл `.env` в каталоге `star_burger/` и присвойте значения переменным окружения в формате: ПЕРЕМЕННАЯ=значение.
+
+- `DEBUG` — дебаг-режим. Поставьте `False`.
+- `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на
+  вашем сайте. Присвойте значение переменной `django-insecure-0if40nf4nf93n4`.
+- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
+- `YANDEX_MAP_API` — API Яндекс-геокодера. Как получить токен
+  смотреть [здесь](https://dvmn.org/encyclopedia/api-docs/yandex-geocoder-api/).
+- `ROLLBAR_ACCESS_TOKEN` — токен доступа к проекту для мониторинга исключений в Rollbar. Создайте проект
+  по [ссылке](https://rollbar.com/). Выберите свой фреймворк, чтобы начать работу с
+  Rollbar SDK, и интегрируйте SDK в ваш проект по инструкции.
+- `ENVIRONMENT` — название окружения или инсталляции сайта в Rollbar.
+- `DB_URL` — однострочный адрес к базе данных Postgres в формате `postgres://USER:PASSWORD@HOST:PORT/NAME`. Больше
+  информации в [документации](https://github.com/jacobian/dj-database-url).
+
 ## Как запустить dev-версию сайта
 
 Для запуска сайта нужно запустить **одновременно** бэкенд и фронтенд, в двух терминалах.
@@ -68,13 +85,7 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
-
-```sh
-SECRET_KEY=django-insecure-0if40nf4nf93n4
-```
-
-Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
+Создайте и подключите базу данных Postgres по инструкции ниже и отмигрируйте её следующей командой:
 
 ```sh
 python manage.py migrate
@@ -165,7 +176,44 @@ Parcel будет следить за файлами в каталоге `bundle
 следит за пересборкой фронтенда и предупреждает JS-код в браузере о необходимости подтянуть свежий код. Но если вдруг
 что-то у вас идёт не так, то начните ремонт со сброса браузерного кэша, жмите <kbd>Ctrl-F5</kbd>.
 
+## Как подключить Postgres
+
+Следующие `apt` команды позволяют получить необходимые пакеты:
+
+```sh
+sudo apt-get update
+sudo apt-get install python3-pip python3-dev libpq-dev postgresql postgresql-contrib
+```
+
+Создайте пользователя с sudo привилегиями и последовательно выполните следующие команды для установки и настройки базы данных Postgres:
+
+```sh
+sudo su - postgres
+psql
+CREATE DATABASE название БД;
+CREATE USER пользователь WITH PASSWORD 'пароль';
+ALTER ROLE пользователь SET client_encoding TO 'utf8';
+ALTER ROLE пользователь SET default_transaction_isolation TO 'read committed';
+ALTER ROLE пользователь SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE название БД TO пользователь;
+```
+
+Наполните БД Postgres самостоятельно, либо используйте команду для переноса данных из тестового файла `db.json`:
+
+```python
+python manage.py loaddata db.json
+```
+
 ## Как запустить prod-версию сайта
+
+Следующие `apt` команды позволяют получить необходимые пакеты:
+
+```sh
+sudo apt-get update
+sudo apt install git python3-venv python3-pip nginx
+```
+
+Настроить бэкенд: повторите инструкцию по настройке бэкенда dev-версии сайта.
 
 Собрать фронтенд:
 
@@ -173,20 +221,73 @@ Parcel будет следить за файлами в каталоге `bundle
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
-Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
+Настройте Nginx на раздачу медиа-файлов и статис-файлов. Для этого в папке `/etc/nginx/sites-enabled/` создайте любой файл без расширения (например, starburder) и скопируйте в него конфиг:
 
-- `DEBUG` — дебаг-режим. Поставьте `False`.
-- `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на
-  вашем сайте.
-- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
-- `YANDEX_MAP_API` — API Яндекс-геокодера. Как получить токен
-  смотреть [здесь](https://dvmn.org/encyclopedia/api-docs/yandex-geocoder-api/).
-- `ROLLBAR_ACCESS_TOKEN` — токен доступа к проекту для мониторинга исключений в Rollbar. Создайте проект
-  по [ссылке](https://rollbar.com/). Выберите свой фреймворк, чтобы начать работу с
-  Rollbar SDK, и интегрируйте SDK в ваш проект по инструкции.
-- `ENVIRONMENT` — название окружения или инсталляции сайта в Rollbar.
-- `DB_URL` — однострочный адрес к базе данных Postgres в формате `postgres://USER:PASSWORD@HOST:PORT/NAME`. Больше
-  информации в [документации](https://github.com/jacobian/dj-database-url).
+```sh
+server {
+    server_name starburgerrr.ru;
+    location /media/ {
+        alias /opt/star_burger/media/;
+    }
+    location /static/ {
+        alias /opt/star_burger/staticfiles/;
+    }
+    location / {
+        include '/etc/nginx/proxy_params';
+        proxy_pass http://127.0.0.1:8080/;
+    }
+}
+```
+
+Удалите дефолтный конфиг `/etc/nginx/sites-enabled/default`.
+
+Соберите статику в каталоге `/opt/star-burger/` командой:
+
+```sh
+python3 manage.py collectstatic
+```
+
+Создайте юнит `star-burger.service` в каталоге `/etc/systemd/system` следующего содержания:
+
+```sh
+[Unit]
+Description=Django service
+After=network.target
+Requires=postgresql.service
+
+[Service]
+WorkingDirectory=/opt/star-burger/
+ExecStart=/opt/star-burger/venv/bin/gunicorn -b 127.0.0.1:8080 --workers 3 star_burger.wsgi:application
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Запустить/остановить юнит:
+
+```sh
+systemctl [start|stop] [nginx.service|star-burger.service]
+```
+
+Включить/выключить автозапуск юнита при загрузке системы:
+
+```sh
+systemctl [enable|disable] [nginx.service|star-burger.service]
+```
+
+Релоад конфигурации systemd:
+
+```sh
+systemctl daemon-reload
+```
+
+Релоад конфигурации демона:
+
+```sh
+systemctl reload nginx.service
+systemctl restart star-burger.service
+```
 
 ## Инструкция по быстрому обновлению кода на сервере
 Подключаясь к серверу по ssh вы сначала оказываетесь в домашней директории пользователя, в которой лежит bash-скрипт для автоматического деплоя. Запустите bash-скрипт командой:
