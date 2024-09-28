@@ -154,7 +154,7 @@ STATICFILES_DIRS = [
 YANDEX_MAP_API = env.str('YANDEX_MAP_API')
 
 ROLLBAR = {
-    'access_token': env.str('ROLLBAR_ACCESS_TOKEN'),
+    'access_token': env.str('ROLLBAR_ACCESS_TOKEN', None),
     'environment': env.str('ENVIRONMENT', 'production'),
     'code_version': '1.0',
     'root': BASE_DIR,
