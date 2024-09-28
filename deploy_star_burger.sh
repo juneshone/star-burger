@@ -21,7 +21,6 @@ echo Применение дата-миграций
 python3 manage.py migrate --noinput
 
 echo Перезапуск сервисов systemctl
-sudo systemctl daemon-reload
 sudo systemctl restart star-burger.service
 sudo systemctl reload nginx.service
 
