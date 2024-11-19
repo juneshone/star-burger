@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  db:
+    container_name: db
+    image: postgres:17.0-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file: ".env"
+
+  frontend:
+    container_name: frontend
+    build: frontend
+    image: star-burger-frontend
+    command: ./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
+    volumes:
+      - bundles:/opt/star-burger/bundles
+      - assets:/opt/star-burger/assets
+
+  backend:
+    container_name: backend
+    build: backend
+    image: star-burger-backend
+    env_file: ".env"
+    command: sh -c "python3 manage.py runserver 0.0.0.0:80"
+    volumes:
+      - media:/opt/star-burger/media
+      - assets:/opt/star-burger/assets
+      - bundles:/opt/star-burger/bundles
+    ports:
+      - 127.0.0.1:8000:80
+    depends_on:
+      - db
+      - frontend
+
+volumes:
+  db_data:
+  assets:
+  bundles:
+  media:

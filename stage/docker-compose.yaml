@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+  db:
+    container_name: db
+    image: postgres:17.0-alpine
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file: ".env"
+
+  frontend:
+    container_name: frontend
+    build: frontend
+    image: star-burger-frontend
+    restart: always
+    command: ./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
+    volumes:
+      - bundles:/opt/star-burger/bundles
+      - assets:/opt/star-burger/assets
+
+  backend:
+    container_name: backend
+    build: backend
+    image: star-burger-backend
+    restart: always
+    env_file: ".env"
+    command: sh -c "gunicorn -b 127.0.0.1:8080 --workers 3 star_burger.wsgi:application"
+    volumes:
+      - media:/opt/star-burger/media
+      - assets:/opt/star-burger/assets
+      - bundles:/opt/star-burger/bundles
+    ports:
+      - 127.0.0.1:8000:8080
+    depends_on:
+      - db
+      - frontend
+
+volumes:
+  db_data:
+  assets:
+  bundles:
+  media:

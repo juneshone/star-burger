@@ -112,7 +112,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 DATABASES = {
-    'default': dj_database_url.parse(env.str('DB_URL'), conn_max_age=600)
+    'default': dj_database_url.parse(env.str('DB_URL', 'postgres://...'), conn_max_age=600)
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -151,7 +151,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "bundles"),
 ]
 
-YANDEX_MAP_API = env.str('YANDEX_MAP_API')
+YANDEX_MAP_API = env.str('YANDEX_MAP_API', None)
 
 ROLLBAR = {
     'access_token': env.str('ROLLBAR_ACCESS_TOKEN', None),
