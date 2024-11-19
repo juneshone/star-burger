@@ -11,7 +11,7 @@ services:
 
   frontend:
     container_name: frontend
-    build: frontend
+    build: ../frontend
     image: star-burger-frontend
     restart: always
     command: ./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
@@ -21,7 +21,7 @@ services:
 
   backend:
     container_name: backend
-    build: backend
+    build: ../backend
     image: star-burger-backend
     restart: always
     env_file: ".env"
