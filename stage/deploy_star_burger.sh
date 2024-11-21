@@ -1,25 +1,19 @@
 #!/bin/bash
 set -e
 
-cd /opt/star-burger/
+cd /opt/star-burger/stage/
 
 echo Обновление кода на сервере
 git pull git@github.com:juneshone/star-burger.git
 
-echo Установка библиотек
-source venv/bin/activate
-[ ! -f .env ] || export $(grep -v '^#' .env | xargs)
-pip3 install -r requirements.txt
-npm ci --dev
-
-echo Пересборка JS-код
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
+echo Развертывание
+docker-compose -f docker-compose.yaml up --build -d
 
 echo Пересборка статики Django
-python3 manage.py collectstatic --noinput
+docker-compose -f docker-compose.yaml exec backend python3 manage.py collectstatic --noinput
 
 echo Применение дата-миграций
-python3 manage.py migrate --noinput
+docker-compose -f docker-compose.yaml exec backend python3 manage.py migrate
 
 echo Перезапуск сервисов systemctl
 sudo systemctl restart star-burger.service

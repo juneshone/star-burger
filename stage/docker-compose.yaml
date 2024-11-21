@@ -25,13 +25,14 @@ services:
     image: star-burger-backend
     restart: always
     env_file: ".env"
-    command: sh -c "gunicorn -b 127.0.0.1:8080 --workers 3 star_burger.wsgi:application"
+    command: sh -c "gunicorn -b 0.0.0.0:8080 --workers 3 star_burger.wsgi:application"
     volumes:
-      - media:/opt/star-burger/media
+      - ../backend/media:/opt/star-burger/media
+      - ../backend/staticfiles:/opt/star-burger/staticfiles
       - assets:/opt/star-burger/assets
       - bundles:/opt/star-burger/bundles
     ports:
-      - 127.0.0.1:8000:8080
+      - 127.0.0.1:8080:8080
     depends_on:
       - db
       - frontend

@@ -20,11 +20,22 @@
 
 Ссылка на сайт: https://starburgerrr.ru/
 
+## Как подготовить окружение к локальной разработке
+
+Код в репозитории полностью докеризирован, поэтому для запуска приложения вам понадобится Docker. Инструкции по его
+установке ищите на официальных сайтах:
+
+- [Get Started with Docker](https://www.docker.com/get-started/)
+
+Вместе со свежей версией Docker к вам на компьютер автоматически будет установлен Docker Compose. Дальнейшие инструкции
+будут его активно использовать.
+
 ## Переменнные окружения
 
-Часть данных проекта берётся из переменных окружения. Чтобы их определить, создайте файл `.env` в каталоге `star_burger/` и присвойте значения переменным окружения в формате: ПЕРЕМЕННАЯ=значение.
+Часть данных проекта берётся из переменных окружения. Чтобы их определить, создайте файл `.env` в
+каталоге `star_burger/` и присвойте значения переменным окружения в формате: ПЕРЕМЕННАЯ=значение.
 
-- `DEBUG` — дебаг-режим. Поставьте `False`.
+- `DEBUG` — дебаг-режим. Для dev-разработки поставьте `True`.
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на
   вашем сайте. Присвойте значение переменной `django-insecure-0if40nf4nf93n4`.
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
@@ -33,15 +44,17 @@
 - `ROLLBAR_ACCESS_TOKEN` — токен доступа к проекту для мониторинга исключений в Rollbar. Создайте проект
   по [ссылке](https://rollbar.com/). Выберите свой фреймворк, чтобы начать работу с
   Rollbar SDK, и интегрируйте SDK в ваш проект по инструкции.
-- `ENVIRONMENT` — название окружения или инсталляции сайта в Rollbar.
-- `DB_URL` — однострочный адрес к базе данных Postgres в формате `postgres://USER:PASSWORD@HOST:PORT/NAME`. Больше
+- `ENVIRONMENT` — название окружения или инсталляции сайта в Rollbar. Например, `development`.
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` - пользователь, пароль и назвние БД postgres.
+- `DB_URL` — однострочный адрес к базе данных Postgres в формате `postgres://USER:PASSWORD@dbT:5432/NAME`. Больше
   информации в [документации](https://github.com/jacobian/dj-database-url).
 
 ## Как запустить dev-версию сайта
 
-Для запуска сайта нужно запустить **одновременно** бэкенд и фронтенд, в двух терминалах.
-
-### Как собрать бэкенд
+Для работы сайта в dev-режиме будет установлен [Parcel](https://parceljs.org/) — это упаковщик веб-приложений, похожий
+на [Webpack](https://webpack.js.org/). В отличии от Webpack он прост в использовании и совсем не требует настроек.
+Одновременно будут работать сразу две
+программы `runserver` и `parcel`.
 
 Скачайте код:
 
@@ -55,19 +68,6 @@ git clone https://github.com/devmanorg/star-burger.git
 cd star-burger
 ```
 
-[Установите Python](https://www.python.org/), если этого ещё не сделали.
-
-Проверьте, что `python` установлен и корректно настроен. Запустите его в командной строке:
-
-```sh
-python --version
-```
-
-**Важно!** Версия Python должна быть не ниже 3.6.
-
-Возможно, вместо команды `python` здесь и в остальных инструкциях этого README придётся использовать `python3`. Зависит
-это от операционной системы и от того, установлен ли у вас Python старой второй версии.
-
 В каталоге проекта создайте виртуальное окружение:
 
 ```sh
@@ -79,75 +79,10 @@ python -m venv venv
 - Windows: `.\venv\Scripts\activate`
 - MacOS/Linux: `source venv/bin/activate`
 
-Установите зависимости в виртуальное окружение:
+Запустите базу данных и сайт:
 
-```sh
-pip install -r requirements.txt
-```
-
-Создайте и подключите базу данных Postgres по инструкции ниже и отмигрируйте её следующей командой:
-
-```sh
-python manage.py migrate
-```
-
-Запустите сервер:
-
-```sh
-python manage.py runserver
-```
-
-Откройте сайт в браузере по адресу [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Если вы увидели пустую белую
-страницу, то не пугайтесь, выдохните. Просто фронтенд пока ещё не собран. Переходите к следующему разделу README.
-
-### Собрать фронтенд
-
-**Откройте новый терминал**. Для работы сайта в dev-режиме необходима одновременная работа сразу двух
-программ `runserver` и `parcel`. Каждая требует себе отдельного терминала. Чтобы не выключать `runserver` откройте для
-фронтенда новый терминал и все нижеследующие инструкции выполняйте там.
-
-[Установите Node.js](https://nodejs.org/en/), если у вас его ещё нет.
-
-Проверьте, что Node.js и его пакетный менеджер корректно установлены. Если всё исправно, то терминал выведет их версии:
-
-```sh
-nodejs --version
-# v16.16.0
-# Если ошибка, попробуйте node:
-node --version
-# v16.16.0
-
-npm --version
-# 8.11.0
-```
-
-Версия `nodejs` должна быть не младше `10.0` и не старше `16.16`. Лучше ставьте `16.16.0`, её мы тестировали.
-Версия `npm` не важна. Как обновить Node.js читайте в
-статье: [How to Update Node.js](https://phoenixnap.com/kb/update-node-js-version).
-
-Перейдите в каталог проекта и установите пакеты Node.js:
-
-```sh
-cd star-burger
-npm ci --dev
-```
-
-Команда `npm ci` создаст каталог `node_modules` и установит туда пакеты Node.js. Получится аналог виртуального окружения
-как для Python, но для Node.js.
-
-Помимо прочего будет установлен [Parcel](https://parceljs.org/) — это упаковщик веб-приложений, похожий
-на [Webpack](https://webpack.js.org/). В отличии от Webpack он прост в использовании и совсем не требует настроек.
-
-Теперь запустите сборку фронтенда и не выключайте. Parcel будет работать в фоне и следить за изменениями в JS-коде:
-
-```sh
-./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
-```
-
-Если вы на Windows, то вам нужна та же команда, только с другими слешами в путях:
-
-```sh
-.\node_modules\.bin\parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
+```shell
+$ docker-compose -f docker-compose.yaml up
 ```
 
 Дождитесь завершения первичной сборки. Это вполне может занять 10 и более секунд. О готовности вы узнаете по сообщению в
@@ -155,6 +90,17 @@ npm ci --dev
 
 ```
 ✨  Built in 10.89s
+```
+
+Готово. Сайт будет доступен по адресу [http://127.0.0.1:8000](http://127.0.0.1:8000). Вход в админку находится по
+адресу [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
+
+В новом терминале, не выключая сайт, запустите несколько команд:
+
+```shell
+$ docker compose run --rm backend python3 manage.py migrate  # создаём/обновляем таблицы в БД
+$ docker compose run --rm backend python3 manage.py createsuperuser  # создаём в БД учётку суперпользователя
+$ docker compose run --rm backend python3 manage.py loaddata db.json # при необходимости загрузите тестовые данные в БД
 ```
 
 Parcel будет следить за файлами в каталоге `bundles-src`. Сначала он прочитает содержимое `index.js` и узнает какие
@@ -176,131 +122,7 @@ Parcel будет следить за файлами в каталоге `bundle
 следит за пересборкой фронтенда и предупреждает JS-код в браузере о необходимости подтянуть свежий код. Но если вдруг
 что-то у вас идёт не так, то начните ремонт со сброса браузерного кэша, жмите <kbd>Ctrl-F5</kbd>.
 
-## Как подключить Postgres
-
-Следующие `apt` команды позволяют получить необходимые пакеты:
-
-```sh
-sudo apt-get update
-sudo apt-get install python3-pip python3-dev libpq-dev postgresql postgresql-contrib
-```
-
-Создайте пользователя с sudo привилегиями и последовательно выполните следующие команды для установки и настройки базы данных Postgres:
-
-```sh
-sudo su - postgres
-psql
-CREATE DATABASE название БД;
-CREATE USER пользователь WITH PASSWORD 'пароль';
-ALTER ROLE пользователь SET client_encoding TO 'utf8';
-ALTER ROLE пользователь SET default_transaction_isolation TO 'read committed';
-ALTER ROLE пользователь SET timezone TO 'UTC';
-GRANT ALL PRIVILEGES ON DATABASE название БД TO пользователь;
-```
-
-Наполните БД Postgres самостоятельно, либо используйте команду для переноса данных из тестового файла `db.json`:
-
-```python
-python manage.py loaddata db.json
-```
-
-## Как запустить prod-версию сайта
-
-Следующие `apt` команды позволяют получить необходимые пакеты:
-
-```sh
-sudo apt-get update
-sudo apt install git python3-venv python3-pip nginx
-```
-
-Настроить бэкенд: повторите инструкцию по настройке бэкенда dev-версии сайта.
-
-Собрать фронтенд:
-
-```sh
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
-```
-
-Настройте Nginx на раздачу медиа-файлов и статис-файлов. Для этого в папке `/etc/nginx/sites-enabled/` создайте любой файл без расширения (например, starburder) и скопируйте в него конфиг:
-
-```sh
-server {
-    server_name starburgerrr.ru;
-    location /media/ {
-        alias /opt/star_burger/media/;
-    }
-    location /static/ {
-        alias /opt/star_burger/staticfiles/;
-    }
-    location / {
-        include '/etc/nginx/proxy_params';
-        proxy_pass http://127.0.0.1:8080/;
-    }
-}
-```
-
-Удалите дефолтный конфиг `/etc/nginx/sites-enabled/default`.
-
-Соберите статику в каталоге `/opt/star-burger/` командой:
-
-```sh
-python3 manage.py collectstatic
-```
-
-Создайте юнит `star-burger.service` в каталоге `/etc/systemd/system` следующего содержания:
-
-```sh
-[Unit]
-Description=Django service
-After=network.target
-Requires=postgresql.service
-
-[Service]
-WorkingDirectory=/opt/star-burger/
-ExecStart=/opt/star-burger/venv/bin/gunicorn -b 127.0.0.1:8080 --workers 3 star_burger.wsgi:application
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Запустить/остановить юнит:
-
-```sh
-systemctl [start|stop] [nginx.service|star-burger.service]
-```
-
-Включить/выключить автозапуск юнита при загрузке системы:
-
-```sh
-systemctl [enable|disable] [nginx.service|star-burger.service]
-```
-
-Релоад конфигурации systemd:
-
-```sh
-systemctl daemon-reload
-```
-
-Релоад конфигурации демона:
-
-```sh
-systemctl reload nginx.service
-systemctl restart star-burger.service
-```
-
-## Инструкция по быстрому обновлению кода на сервере
-Подключаясь к серверу по ssh вы сначала оказываетесь в домашней директории пользователя, в которой лежит bash-скрипт для автоматического деплоя. Запустите bash-скрипт командой:
-
-```sh
-./deploy_star_burger.sh
-```
-
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу
 был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
-
-Где используется репозиторий:
-
-- Второй и третий урок [учебного курса Django](https://dvmn.org/modules/django/)

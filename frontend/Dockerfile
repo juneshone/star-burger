@@ -1,4 +1,5 @@
 FROM node:15.8-alpine3.11
+
 WORKDIR /opt/star-burger
 COPY . .
 RUN npm ci --dev
